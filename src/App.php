@@ -12,8 +12,9 @@ class App
     public function run(string $path): void
     {
 
+        $rootUrl = '/';
         $allUrl = '/all';
-        $routes = ['/', $allUrl];
+        $routes = [$rootUrl, $allUrl];
 
         if (! in_array($path, $routes, true)) {
             http_response_code(404);
@@ -57,14 +58,18 @@ class App
             )
         );
 
+        $isAllUrl = $path === $allUrl;
+
+        $buttonUrl = $isAllUrl ? $rootUrl : $allUrl;
+        $buttonName = $isAllUrl ? 'Sans vidéo uniquement' : 'Toutes';
+
         $html = <<<HTML
         <head><title>Vidéos des chaînes</title></head>
         <body>
             <h1>Vidéos des chaînes</h1>
+            <h2><a href="$buttonUrl">$buttonName</a></h2>
             <ul>
         HTML;
-
-        $isAllUrl = $path === $allUrl;
 
         foreach ($mostLikedChannels as $mostLikedChannel) {
             $channelId = $mostLikedChannel['channel_id'];
