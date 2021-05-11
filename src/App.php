@@ -9,8 +9,17 @@ use PierreMiniggio\DatabaseFetcher\DatabaseFetcher;
 class App
 {
 
-    public function run(): void
+    public function run(string $path): void
     {
+
+        $allUrl = '/all';
+        $routes = ['/', $allUrl];
+
+        if (! in_array($path, $routes, true)) {
+            http_response_code(404);
+
+            return;
+        }
 
         $projectFolder =
             __DIR__
@@ -54,6 +63,8 @@ class App
             <h1>Vidéos des chaînes</h1>
             <ul>
         HTML;
+
+        $isAllUrl = $path === $allUrl;
 
         foreach ($mostLikedChannels as $mostLikedChannel) {
             $channelId = $mostLikedChannel['channel_id'];
@@ -123,6 +134,10 @@ class App
             if (! $videos) {
                 $videoHtml = 'Aucune';
             } else {
+                if (! $isAllUrl) {
+                    continue;
+                }
+
                 $numberOfVideos = count($videos);
                 $videoNames = implode(', ', $videos);
                 $videoHtml = <<<HTML
@@ -130,15 +145,18 @@ class App
                 HTML;
             }
 
+            $videoLinkHtml = $isAllUrl ? ' ' . <<<HTML
+            <a
+                href="$channelVideoFolderLink"
+                target="_blank"
+            >$videoHtml</a>
+            HTML : '';
+
             $html .= <<<HTML
-                    <li><a
-                        href="https://youtube.com/channel/$channelId"
-                        target="_blank"
-                    >$channelName ({$mostLikedChannel['likes']})</a> <a
-                        href="$channelVideoFolderLink"
-                        target="_blank"
-                    >$videoHtml</a></li>
-                </body>
+                <li><a
+                    href="https://youtube.com/channel/$channelId"
+                    target="_blank"
+                >$channelName ({$mostLikedChannel['likes']})</a>$videoLinkHtml</li>
             HTML;
         }
 
