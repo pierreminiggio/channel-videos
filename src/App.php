@@ -79,13 +79,67 @@ class App
                 }
             }
 
+            $channelVideoFolderLink = 'https://storage.miniggiodev.fr/youtube-likes-recap/channel/' . $channelId . '/';
+            $channelVideoFolderCurl = curl_init($channelVideoFolderLink);
+            curl_setopt($channelVideoFolderCurl, CURLOPT_RETURNTRANSFER, true);
+            $channelVideoFolderCurlResponse = curl_exec($channelVideoFolderCurl);
+            $channelVideoFolderCurlInfos = curl_getinfo($channelVideoFolderCurl);
+            curl_close($channelVideoFolderCurl);
+
+            $videos = [];
+            if (isset($channelVideoFolderCurlInfos['http_code']) && $channelVideoFolderCurlInfos['http_code'] === 200) {
+                
+                $splitOnLinkStartOpens = explode('<a', $channelVideoFolderCurlResponse);
+
+                foreach ($splitOnLinkStartOpens as $splitOnLinkStartOpenindex => $splitOnLinkStartOpen) {
+                    if ($splitOnLinkStartOpenindex === 0) {
+                        continue;
+                    }
+
+                    $splitOnLinkStartClose = explode('>', $splitOnLinkStartOpen, 2);
+
+                    if (count($splitOnLinkStartClose) === 1) {
+                        continue;
+                    }
+
+                    $afterLinkStartClose = $splitOnLinkStartClose[1];
+                    
+                    $splitOnLinkEndStart = explode('<', $afterLinkStartClose, 2);
+
+                    if (count($splitOnLinkEndStart) === 1) {
+                        continue;
+                    }
+
+                    $linkContent = $splitOnLinkEndStart[0];
+
+                    if (! str_contains($linkContent, '.')) {
+                        continue;
+                    }
+
+                    $videos[] = $linkContent;
+                }
+            }
+            
+            if (! $videos) {
+                $videoHtml = 'Aucune';
+            } else {
+                $numberOfVideos = count($videos);
+                $videoNames = implode(', ', $videos);
+                $videoHtml = <<<HTML
+                    <span title="$videoNames">$numberOfVideos</span>
+                HTML;
+            }
+
             $html .= <<<HTML
-                <li><a
-                    href="https://youtube.com/channel/$channelId"
-                    target="_blank"
-                >$channelName ({$mostLikedChannel['likes']})</a></li>
-            </body>
-        HTML;
+                    <li><a
+                        href="https://youtube.com/channel/$channelId"
+                        target="_blank"
+                    >$channelName ({$mostLikedChannel['likes']})</a> <a
+                        href="$channelVideoFolderLink"
+                        target="_blank"
+                    >$videoHtml</a></li>
+                </body>
+            HTML;
         }
 
         $html .= <<<HTML
