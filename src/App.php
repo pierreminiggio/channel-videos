@@ -71,7 +71,14 @@ class App
             <ul>
         HTML;
 
-        foreach ($mostLikedChannels as $mostLikedChannel) {
+        $maxChannelCount = $_GET['count'] ?? 500;
+
+        foreach ($mostLikedChannels as $mostLikedChannelCount => $mostLikedChannel) {
+
+            if ($mostLikedChannelCount >= $maxChannelCount) {
+                break;
+            }
+
             $channelId = $mostLikedChannel['channel_id'];
             $channelInfosCurl = curl_init(
                 'https://youtube-channel-infos-api.miniggiodev.fr/' . $channelId
